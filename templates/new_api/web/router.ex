@@ -2,7 +2,7 @@ defmodule <%= app_module %>.Router do
   use <%= app_module %>.Web, :router
 
   pipeline :api do
-    plug :accepts, ["json-api"]
+    plug :accepts, [<%= if jsonapi do %>"json-api"<% else %>"json"<% end %>]
   end
 
   scope "/", <%= app_module %> do

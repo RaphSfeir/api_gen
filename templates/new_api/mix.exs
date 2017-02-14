@@ -22,7 +22,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= app_module %>, []},
-     applications: [:phoenix, :phoenix_pubsub, :cowboy,<%= if cors do %>:cors_plug, <% end %> <%= if jsonapi do %>:ja_serializer, <% end %>:logger, :gettext<%= if ecto do %>,
+     applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :gettext<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
@@ -42,7 +42,6 @@ defmodule <%= app_module %>.Mixfile do
      {:ja_serializer, "~> 0.11"},<% end %>
      {:distillery, "~> 0.9"},<%= if cors do %>
      {:cors_plug, "~> 1.1"},<% end %>
-     {:dayron, git: "https://github.com/raphsfeir/dayron.git", branch: "nested_data"},
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 

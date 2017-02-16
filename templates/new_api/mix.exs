@@ -22,7 +22,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= app_module %>, []},
-     applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :gettext<%= if ecto do %>,
+     applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :gettext<%= if ecto do %>,<%= if pagination do %>:scrivener_ecto, <% end %>
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
@@ -41,7 +41,8 @@ defmodule <%= app_module %>.Mixfile do
      {:gettext, "~> 0.11"},<%= if jsonapi do %>
      {:ja_serializer, "~> 0.11"},<% end %>
      {:distillery, "~> 0.9"},<%= if cors do %>
-     {:cors_plug, "~> 1.1"},<% end %>
+     {:cors_plug, "~> 1.1"},<% end %><%= if pagination do %>
+     {:scrivener_ecto, "~> 1.0"},<% end %>
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 

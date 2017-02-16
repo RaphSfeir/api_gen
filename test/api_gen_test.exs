@@ -17,13 +17,13 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
   end
 
   test "returns the version" do
-    Mix.Tasks.Pow.Api.New.run(["-v"])
+    Mix.Tasks.Phoenix.Api.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
   end
 
   test "new without defaults and without Phoenix HTML" do
     in_tmp "new without defaults and without Phoenix HTML", fn ->
-      Mix.Tasks.Pow.Api.New.run([@app_name, "--no-ecto"])
+      Mix.Tasks.Phoenix.Api.New.run([@app_name, "--no-ecto"])
 
       # No Ecto
       config = ~r/config :photo_blog, PhotoBlog.Repo,/
@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
 
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
-      Mix.Tasks.Pow.Api.New.run([@app_name, "--binary-id"])
+      Mix.Tasks.Phoenix.Api.New.run([@app_name, "--binary-id"])
 
       assert_file "photo_blog/web/web.ex", fn file ->
         assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
@@ -67,7 +67,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
 
   test "new with uppercase" do
     in_tmp "new with uppercase", fn ->
-      Mix.Tasks.Pow.Api.New.run(["photoBlog"])
+      Mix.Tasks.Phoenix.Api.New.run(["photoBlog"])
 
       assert_file "photoBlog/README.md"
 
@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
   test "new with path, app and module" do
     in_tmp "new with path, app and module", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
 
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
@@ -100,7 +100,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
       File.write! "mix.exs", umbrella_mixfile_contents()
       File.mkdir! "apps"
       File.cd! "apps", fn ->
-        Mix.Tasks.Pow.Api.New.run([@app_name])
+        Mix.Tasks.Phoenix.Api.New.run([@app_name])
 
         assert_file "photo_blog/mix.exs", fn(file) ->
           assert file =~ "deps_path: \"../../deps\""
@@ -113,17 +113,27 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
   test "new with jsonapi" do
     in_tmp "new with jsonapi", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path, "--jsonapi", "true"])
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--jsonapi", "true"])
 
       assert_file "custom_path/mix.exs", ~r/:ja_serializer/
       assert_file "custom_path/config/config.exs", ["application/vnd.api+json"]
     end
   end
 
+  test "new with pagination" do
+    in_tmp "new with pagination", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--pagination", "true"])
+
+      assert_file "custom_path/mix.exs", ~r/:scrivener/
+      assert_file "custom_path/lib/custom_path/repo.ex", "use Scrivener"
+    end
+  end
+
   test "new with cors" do
     in_tmp "new with cors", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path, "--cors", "true"])
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--cors", "true"])
 
       assert_file "custom_path/mix.exs", ~r/:cors_plug/
       assert_file "custom_path/lib/custom_path/endpoint.ex", "plug CORSPlug"
@@ -133,7 +143,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
   test "new with mysql adapter" do
     in_tmp "new with mysql adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path, "--database", "mysql"])
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--database", "mysql"])
 
       assert_file "custom_path/mix.exs", ~r/:mariaex/
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
@@ -149,7 +159,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
   test "new with tds adapter" do
     in_tmp "new with tds adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path, "--database", "mssql"])
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--database", "mssql"])
 
       assert_file "custom_path/mix.exs", ~r/:tds_ecto/
       assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
@@ -165,7 +175,7 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
   test "new with mongodb adapter" do
     in_tmp "new with mongodb adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path, "--database", "mongodb"])
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--database", "mongodb"])
 
       assert_file "custom_path/mix.exs", ~r/:mongodb_ecto/
 
@@ -194,60 +204,44 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
     end
   end
 
-  test "new defaults to MySQL adapter" do
-    in_tmp "new defaults to MySQL adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Pow.Api.New.run([project_path])
-
-      assert_file "custom_path/mix.exs", ~r/:maria/
-      assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/, ~r/hostname: "localhost"/]
-      assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/, ~r/hostname: "localhost"/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
-
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
-    end
-  end
-
   test "new with invalid database adapter" do
     in_tmp "new with invalid database adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
       assert_raise Mix.Error, ~s(Unknown database "invalid"), fn ->
-        Mix.Tasks.Pow.Api.New.run([project_path, "--database", "invalid"])
+        Mix.Tasks.Phoenix.Api.New.run([project_path, "--database", "invalid"])
       end
     end
   end
 
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
-      Mix.Tasks.Pow.Api.New.run ["007invalid"]
+      Mix.Tasks.Phoenix.Api.New.run ["007invalid"]
     end
 
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
-      Mix.Tasks.Pow.Api.New.run ["valid", "--app", "007invalid"]
+      Mix.Tasks.Phoenix.Api.New.run ["valid", "--app", "007invalid"]
     end
 
     assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->
-      Mix.Tasks.Pow.Api.New.run ["valid", "--module", "not.valid"]
+      Mix.Tasks.Phoenix.Api.New.run ["valid", "--module", "not.valid"]
     end
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
-      Mix.Tasks.Pow.Api.New.run ["string"]
+      Mix.Tasks.Phoenix.Api.New.run ["string"]
     end
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
-      Mix.Tasks.Pow.Api.New.run ["valid", "--app", "mix"]
+      Mix.Tasks.Phoenix.Api.New.run ["valid", "--app", "mix"]
     end
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
-      Mix.Tasks.Pow.Api.New.run ["valid", "--module", "String"]
+      Mix.Tasks.Phoenix.Api.New.run ["valid", "--module", "String"]
     end
   end
 
   test "invalid options" do
     assert_raise Mix.Error, ~r/Invalid option: -d/, fn ->
-      Mix.Tasks.Pow.Api.New.run(["valid", "-database", "mysql"])
+      Mix.Tasks.Phoenix.Api.New.run(["valid", "-database", "mysql"])
     end
   end
 
@@ -256,11 +250,11 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
 
       output =
         capture_io fn ->
-          Mix.Tasks.Pow.Api.New.run []
+          Mix.Tasks.Phoenix.Api.New.run []
         end
 
-      assert output =~ "mix phoenix.new"
-      assert output =~ "Creates a new Phoenix project."
+      assert output =~ "mix phoenix.new.api"
+      assert output =~ "Creates a new Phoenix project with API options and dependencies."
     end
   end
 end

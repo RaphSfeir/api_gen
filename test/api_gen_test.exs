@@ -140,6 +140,26 @@ defmodule Mix.Tasks.Phoenix.Api.NewTest do
     end
   end
 
+  test "new with sentry" do
+    in_tmp "new with sentry", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--errorstracking", "sentry"])
+
+      assert_file "custom_path/mix.exs", ~r/:sentry/
+      assert_file "custom_path/config/config.exs", "config :sentry"
+    end
+  end
+
+  test "new with rollbar" do
+    in_tmp "new with rollbar", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.Api.New.run([project_path, "--errorstracking", "rollbar"])
+
+      assert_file "custom_path/mix.exs", ~r/:rollbax/
+      assert_file "custom_path/config/config.exs", "config :rollbax"
+    end
+  end
+
   test "new with mysql adapter" do
     in_tmp "new with mysql adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")

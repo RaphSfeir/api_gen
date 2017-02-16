@@ -87,6 +87,11 @@ defmodule Mix.Tasks.Phoenix.Api.New do
   Values can be `true` or `false`.
   Defaults to `false`
 
+  * `--errorstracking` Add error tracker to default, using either Sentry.io or Rollbar.
+  Chosen dependency will be added to your project with default configs.
+  Values can be `sentry`, `rollbar` or `false`.
+  Defaults to `false`
+
   * `--no-ecto` - do not generate ecto files for
   the model layer
 
@@ -117,17 +122,13 @@ defmodule Mix.Tasks.Phoenix.Api.New do
 
   @switches [dev: :boolean, ecto: :boolean,
    app: :string, module: :string, database: :string,
-   jsonapi: :boolean, cors: :boolean, pagination: :boolean,
+   jsonapi: :boolean, cors: :boolean, pagination: :boolean, errorstracking: :string,
    binary_id: :boolean ]
 
  def run([version]) when version in ~w(-v --version) do
    Mix.shell.info "Phoenix v#{@version}"
  end
 
- def get_switches() do
- IO.inspect @switches
- @switches
- end
  def run(argv) do
    unless Version.match? System.version, "~> 1.2" do
      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
@@ -163,6 +164,7 @@ defmodule Mix.Tasks.Phoenix.Api.New do
    cors = Keyword.get(opts, :cors, true)
    jsonapi = Keyword.get(opts, :jsonapi, false)
    pagination = Keyword.get(opts, :pagination, false)
+   errors_tracking = Keyword.get(opts, :errorstracking, false)
    phoenix_path = phoenix_path(path, Keyword.get(opts, :dev, false))
 
    # We lowercase the database name because according to the
@@ -172,6 +174,7 @@ defmodule Mix.Tasks.Phoenix.Api.New do
    {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app), mod)
    pubsub_server = get_pubsub_server(mod)
    in_umbrella? = in_umbrella?(path)
+   {errors_tracking_app, errors_tracking_version} = get_errors_tracking(errors_tracking)
 
    adapter_config =
      case Keyword.fetch(opts, :binary_id) do
@@ -204,13 +207,16 @@ defmodule Mix.Tasks.Phoenix.Api.New do
         jsonapi: jsonapi,
         pagination: pagination,
         cors: cors,
+        errors_tracking: errors_tracking,
+        errors_tracking_app: errors_tracking_app,
+        errors_tracking_version: errors_tracking_version,
         adapter_app: adapter_app,
         adapter_module: adapter_module,
         adapter_config: adapter_config,
         hex?: Code.ensure_loaded?(Hex),
         generator_config: generator_config,
         namespaced?: Macro.camelize(app) != mod]
-
+        
        copy_from path, binding, @new
 
        # Optional contents
@@ -364,6 +370,18 @@ defmodule Mix.Tasks.Phoenix.Api.New do
    if File.dir?(name) and not Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
      Mix.raise "Please select another directory for installation."
    end
+ end
+
+  defp get_errors_tracking(false) do
+    {false, false}
+  end
+
+ defp get_errors_tracking("rollbar") do
+   {:rollbax, "~> 0.6"}
+ end
+
+ defp get_errors_tracking("sentry") do
+   {:sentry, "~> 2.0.2"}
  end
 
  defp get_ecto_adapter("mssql", app, module) do

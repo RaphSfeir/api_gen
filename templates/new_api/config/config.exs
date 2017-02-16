@@ -18,9 +18,27 @@ render_errors: [view: <%= app_module %>.ErrorView, accepts: ~w(json)],
 pubsub: [name: <%= app_module %>.PubSub,
  adapter: Phoenix.PubSub.PG2]
 
- #Configure Dayron repos for Kong
- config :<%= app_name %>, <%= app_module %>.KongAdminRepo,
- url: "http://admin-gateway.pow.tf"
+<%= if errors_tracking_app == :sentry do %>
+# Configure sentry
+config :sentry,
+  dsn: "yourdsn",
+  environment_name: Mix.env,
+  included_environments: [:prod]
+<% end %>
+<%= if errors_tracking_app == :rollbax do %>
+# Configure Rollbax
+config :rollbax,
+  access_token: "yourtoken",
+  environment: "production"
+
+  # We register Rollbax.Logger as a Logger backend.
+config :logger,
+  backends: [Rollbax.Logger]
+
+# We configure the Rollbax.Logger backend.
+config :logger, Rollbax.Logger,
+  level: :error
+<% end %>
 
  <%= if jsonapi do %>
  #Configure JSON Api Mime and encoding

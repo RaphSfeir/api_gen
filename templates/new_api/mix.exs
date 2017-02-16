@@ -23,7 +23,7 @@ defmodule <%= app_module %>.Mixfile do
   def application do
     [mod: {<%= app_module %>, []},
      applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :gettext<%= if ecto do %>,<%= if pagination do %>:scrivener_ecto, <% end %>
-                    :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
+                    <%= if errors_tracking do %><%= inspect errors_tracking_app %><% end %>, :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
   # Specifies which paths to compile per environment.
@@ -42,7 +42,8 @@ defmodule <%= app_module %>.Mixfile do
      {:ja_serializer, "~> 0.11"},<% end %>
      {:distillery, "~> 0.9"},<%= if cors do %>
      {:cors_plug, "~> 1.1"},<% end %><%= if pagination do %>
-     {:scrivener_ecto, "~> 1.0"},<% end %>
+     {:scrivener_ecto, "~> 1.0"},<% end %><%= if errors_tracking do %>
+     {<%= inspect errors_tracking_app %>, "~> #{errors_tracking_version}"},<% end %>
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 
